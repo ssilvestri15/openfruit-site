@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenFruit — Build iOS apps on Windows</title>
+<meta name="description" content="OpenFruit is an open-source toolchain that builds existing Xcode projects on Windows: Swift, Objective-C, SwiftPM, storyboards, Mach-O linking and signed IPAs. OpenFruit Studio is the IDE built on top of it.">
+<meta name="theme-color" content="#161C16">
+<meta property="og:title" content="OpenFruit — Build iOS apps on Windows">
+<meta property="og:description" content="Open-source iOS toolchain and IDE for Windows. Without a Mac. For free.">
+<meta property="og:image" content="assets/openfruit-banner.png">
+<link rel="icon" href="assets/openfruit-icon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="assets/openfruit.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #161C16;
+  --bg-2: #1A2019;
+  --tile: #222821;
+  --tile-2: #262D25;
+  --line: #2C3329;
+  --deep: #5B6449;
+  --sage-1: #DCE6C2;
+  --sage-2: #C9D3B3;
+  --sage-3: #BCC79F;
+  --sage-4: #A9B48F;
+  --sage-5: #97A27D;
+  --text: #C9D3B3;
+  --muted: #8E977B;
+  --radius: 22px;
+  --sans: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Syne Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.55;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+/* Film grain over the whole page, like the icon's paper texture. */
+body::before {
+  content: "";
+  position: fixed; inset: -50%;
+  pointer-events: none; z-index: 100;
+  opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.2s steps(6) infinite;
+}
+@keyframes grain {
+  0% { transform: translate(0, 0); } 20% { transform: translate(-3%, 2%); } 40% { transform: translate(2%, -3%); }
+  60% { transform: translate(-2%, -1%); } 80% { transform: translate(3%, 3%); } 100% { transform: translate(0, 0); }
+}
+a { color: inherit; }
+.wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+
+/* Ambient light blobs */
+.ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.ambient span {
+  position: absolute; width: 46vmax; height: 46vmax; border-radius: 50%;
+  filter: blur(90px); opacity: .18;
+  background: radial-gradient(circle, var(--sage-3), transparent 62%);
+  animation: drift 26s ease-in-out infinite alternate;
+}
+.ambient span:nth-child(1) { top: -18vmax; left: -12vmax; }
+.ambient span:nth-child(2) { bottom: -22vmax; right: -14vmax; animation-duration: 32s; animation-delay: -8s; opacity: .12; background: radial-gradient(circle, var(--sage-5), transparent 62%); }
+@keyframes drift { to { transform: translate(10vmax, 8vmax) scale(1.15); } }
+
+/* Navigation */
+nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; letter-spacing: .02em; font-size: 1.05rem; color: var(--sage-1); }
+.brand img { width: 30px; height: 30px; }
+nav .links { display: flex; gap: 22px; font-family: var(--mono); font-size: .9rem; }
+nav .links a { text-decoration: none; color: var(--muted); transition: color .2s; }
+nav .links a:hover { color: var(--sage-1); }
+
+/* Hero */
+.hero { padding: 72px 0 40px; display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
+.eyebrow { font-family: var(--mono); color: var(--sage-4); font-size: .9rem; letter-spacing: .04em; display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--tile) 70%, transparent); }
+.eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--sage-3); box-shadow: 0 0 0 0 var(--sage-3); animation: pulse 2.2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sage-3) 70%, transparent); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+h1 { font-size: clamp(2.4rem, 12vw, 6.2rem); line-height: .95; margin: 22px 0 18px; font-weight: 800; letter-spacing: -.02em; }
+h1 .word { display: inline-block; background: linear-gradient(100deg, var(--sage-1), var(--sage-3) 45%, var(--sage-5) 70%, var(--sage-1)); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sheen 7s ease-in-out infinite; }
+@keyframes sheen { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.lead { font-size: clamp(1.15rem, 2.2vw, 1.45rem); color: var(--sage-2); max-width: 34ch; margin: 0 0 30px; }
+.lead b { color: var(--sage-1); font-weight: 700; }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; }
+.btn {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 15px 22px; border-radius: 16px; text-decoration: none;
+  font-weight: 700; font-size: 1.02rem; letter-spacing: .01em;
+  transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s, background .25s;
+}
+.btn svg { width: 20px; height: 20px; flex: none; }
+.btn small { font-family: var(--mono); font-weight: 400; font-size: .78rem; opacity: .75; }
+.btn .label { display: flex; flex-direction: column; line-height: 1.15; }
+.btn-primary { background: linear-gradient(160deg, var(--sage-1), var(--sage-4)); color: var(--bg); box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--sage-3) 80%, transparent); }
+.btn-ghost { background: var(--tile); color: var(--sage-1); border: 1px solid var(--line); }
+.btn:hover { transform: translateY(-3px); }
+.btn-primary:hover { box-shadow: 0 18px 40px -14px color-mix(in srgb, var(--sage-2) 90%, transparent); }
+.btn-ghost:hover { background: var(--tile-2); }
+.btn::after { content: ""; position: absolute; inset: 0; transform: translateX(-120%) skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); }
+.btn:hover::after { animation: shine .9s ease; }
+@keyframes shine { to { transform: translateX(120%) skewX(-20deg); } }
+.btn .badge { font-family: var(--mono); font-size: .72rem; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 18%, transparent); }
+.btn-ghost .badge { background: var(--line); }
+.hint { margin-top: 16px; font-family: var(--mono); font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
+.hero > * { min-width: 0; }
+
+/* Animated logo */
+.logo-stage { position: relative; display: grid; place-items: center; aspect-ratio: 1; }
+.logo-stage::before { content: ""; position: absolute; width: 78%; height: 78%; border-radius: 30%; background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--sage-3) 40%, transparent), transparent 65%); filter: blur(40px); animation: glow 5s ease-in-out infinite; }
+@keyframes glow { 50% { transform: scale(1.12); opacity: .7; } }
+.logo { width: min(400px, 100%); position: relative; animation: float 6s ease-in-out infinite; filter: drop-shadow(0 40px 60px rgba(0,0,0,.55)); }
+@keyframes float { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-14px) rotate(1.5deg); } }
+.logo .cursor { animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.logo .scan { animation: scan 3.2s linear infinite; }
+@keyframes scan { from { transform: translateY(0); } to { transform: translateY(330px); } }
+.orbit { position: absolute; inset: 4%; border: 1px dashed color-mix(in srgb, var(--sage-5) 35%, transparent); border-radius: 50%; animation: spin 40s linear infinite; }
+.orbit::before, .orbit::after { content: ""; position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--sage-2); top: -5px; left: calc(50% - 5px); box-shadow: 0 0 14px var(--sage-2); }
+.orbit::after { top: auto; bottom: -5px; width: 6px; height: 6px; left: calc(50% - 3px); background: var(--sage-5); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Terminal */
+section { padding: 70px 0; }
+h2 { font-size: clamp(2rem, 4.5vw, 3.1rem); line-height: 1.05; margin: 0 0 14px; font-weight: 800; letter-spacing: -.015em; color: var(--sage-1); }
+.sub { color: var(--muted); max-width: 60ch; margin: 0 0 36px; font-size: 1.08rem; }
+.terminal { border-radius: var(--radius); background: linear-gradient(180deg, var(--tile-2), var(--tile)); border: 1px solid var(--line); box-shadow: 0 40px 80px -40px rgba(0,0,0,.8); overflow: hidden; }
+.terminal .bar { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: .85rem; color: var(--muted); }
+.terminal .bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line); }
+.terminal .bar i:nth-child(1) { background: var(--deep); } .terminal .bar i:nth-child(2) { background: var(--sage-5); } .terminal .bar i:nth-child(3) { background: var(--sage-3); }
+.terminal .bar span { margin-left: 10px; }
+.terminal pre { margin: 0; padding: 22px 24px 26px; font-family: var(--mono); font-size: clamp(.78rem, 1.6vw, .95rem); line-height: 1.75; min-height: 21em; white-space: pre-wrap; word-break: break-word; color: var(--sage-2); }
+.terminal .p { color: var(--sage-4); } .terminal .ok { color: var(--sage-1); } .terminal .dim { color: var(--muted); }
+.terminal .caret { display: inline-block; width: .6em; height: 1.1em; vertical-align: -.2em; background: var(--sage-2); animation: blink 1s steps(1) infinite; }
+
+/* Pipeline */
+.pipeline { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; }
+.pipeline::before { content: ""; position: absolute; left: 4%; right: 4%; top: 31px; height: 2px; background: var(--line); }
+.pipeline::after { content: ""; position: absolute; top: 27px; left: 4%; width: 10px; height: 10px; border-radius: 50%; background: var(--sage-1); box-shadow: 0 0 18px 4px color-mix(in srgb, var(--sage-2) 70%, transparent); animation: travel 6s cubic-bezier(.6, 0, .4, 1) infinite; }
+@keyframes travel { from { left: 4%; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } to { left: 95%; opacity: 0; } }
+.step { position: relative; text-align: center; }
+.step .dot { width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 20px; display: grid; place-items: center; background: var(--tile); border: 1px solid var(--line); font-family: var(--mono); color: var(--sage-3); font-size: 1.05rem; transition: transform .3s, background .3s; }
+.step:hover .dot { transform: translateY(-4px); background: var(--tile-2); }
+.step b { display: block; font-size: .95rem; color: var(--sage-1); }
+.step span { font-family: var(--mono); font-size: .76rem; color: var(--muted); }
+
+/* Cards */
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.card { position: relative; padding: 30px; border-radius: var(--radius); background: linear-gradient(170deg, var(--tile-2), var(--bg-2)); border: 1px solid var(--line); overflow: hidden; transition: transform .35s cubic-bezier(.2, .8, .2, 1), border-color .35s; }
+.card:hover { transform: translateY(-6px); border-color: var(--deep); }
+.card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(400px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--sage-3) 12%, transparent), transparent 60%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+.card:hover::before { opacity: 1; }
+.card h3 { margin: 0 0 6px; font-size: 1.6rem; color: var(--sage-1); }
+.card .tag { font-family: var(--mono); font-size: .8rem; color: var(--sage-4); }
+.card p { color: var(--sage-2); margin: 14px 0 20px; }
+.card ul { list-style: none; padding: 0; margin: 0 0 26px; display: grid; gap: 8px; font-family: var(--mono); font-size: .86rem; color: var(--muted); }
+.card li::before { content: "› "; color: var(--sage-3); }
+
+/* Apps */
+.apps { display: flex; flex-wrap: wrap; gap: 12px; }
+.app { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 14px; background: var(--tile); border: 1px solid var(--line); font-weight: 600; color: var(--sage-1); transition: transform .3s, background .3s; }
+.app:hover { transform: translateY(-3px) rotate(-1deg); background: var(--tile-2); }
+.app span { font-family: var(--mono); font-weight: 400; font-size: .78rem; color: var(--muted); }
+
+/* Manifesto */
+.manifesto { text-align: center; padding: 100px 0; }
+.manifesto blockquote { margin: 0 auto; max-width: 18ch; font-size: clamp(2.2rem, 6vw, 4.2rem); line-height: 1.05; font-weight: 800; color: var(--sage-1); letter-spacing: -.02em; }
+.manifesto blockquote em { font-style: normal; color: var(--sage-4); }
+.manifesto p { font-family: var(--mono); color: var(--muted); margin-top: 22px; }
+
+footer { border-top: 1px solid var(--line); padding: 34px 0 48px; color: var(--muted); font-size: .9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; }
+footer a { color: var(--sage-3); text-decoration: none; }
+footer a:hover { color: var(--sage-1); }
+footer .legal { max-width: 70ch; font-size: .8rem; }
+
+/* Reveal on scroll */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(.2, .8, .2, 1), transform .8s cubic-bezier(.2, .8, .2, 1); transition-delay: var(--d, 0s); }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 880px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding-top: 40px; text-align: left; }
+  .logo-stage { max-width: 320px; margin: 0 auto; order: -1; }
+  .grid { grid-template-columns: 1fr; }
+  .pipeline { grid-template-columns: repeat(4, 1fr); row-gap: 26px; }
+  .pipeline::before, .pipeline::after { display: none; }
+  nav .links a.hide-sm { display: none; }
+}
+@media (max-width: 480px) {
+  .pipeline { grid-template-columns: repeat(2, 1fr); }
+  .btn { width: 100%; justify-content: flex-start; }
+  .card { padding: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true"><span></span><span></span></div>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/openfruit-icon.svg" alt="">OpenFruit</a>
+    <div class="links">
+      <a href="#download">Download</a>
+      <a class="hide-sm" href="#how">How it works</a>
+      <a href="https://github.com/ssilvestri15/openfruit">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+  <header class="wrap hero">
+    <div>
+      <span class="eyebrow reveal"><i></i>experimental · open source · GPL-2.0</span>
+      <h1 class="reveal" style="--d:.08s"><span class="word">OpenFruit</span></h1>
+      <p class="lead reveal" style="--d:.16s">Build real iOS apps <b>on Windows</b>. Without a Mac. <b>For free.</b></p>
+      <div class="cta reveal" style="--d:.24s">
+        <a class="btn btn-primary" data-release="core" href="https://github.com/ssilvestri15/openfruit/releases">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+          <span class="label">Download Core<small data-version>openfruit · Windows x64</small></span>
+        </a>
+        <a class="btn btn-ghost" data-release="studio" href="https://github.com/ssilvestri15/openfruit-studio/releases">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="m8 21 4-4 4 4M7 9l2 2-2 2m5 0h4"/></svg>
+          <span class="label">Download Studio<small data-version>the IDE · Windows x64</small></span>
+        </a>
+      </div>
+      <p class="hint reveal" style="--d:.32s">$ openfruit build MyApp.xcodeproj --scheme MyApp</p>
+    </div>
+    <div class="logo-stage reveal" style="--d:.1s" aria-hidden="true">
+      <div class="orbit"></div>
+      <svg class="logo" viewBox="0 0 1024 1024">
+        <defs>
+          <linearGradient id="sage" x1="0.2" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#DCE6C2"/><stop offset="0.55" stop-color="#BCC79F"/><stop offset="1" stop-color="#97A27D"/></linearGradient>
+          <radialGradient id="tile" cx="0.3" cy="0.2" r="1"><stop offset="0" stop-color="#262D25"/><stop offset="1" stop-color="#222821"/></radialGradient>
+          <filter id="paper" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+            <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="4" seed="3" result="relief"/>
+            <feDiffuseLighting in="relief" surfaceScale="2.2" diffuseConstant="1" lighting-color="#ffffff" result="lit"><feDistantLight azimuth="225" elevation="58"/></feDiffuseLighting>
+            <feComponentTransfer in="lit" result="soft"><feFuncR type="linear" slope="0.22" intercept="0.82"/><feFuncG type="linear" slope="0.22" intercept="0.82"/><feFuncB type="linear" slope="0.22" intercept="0.82"/></feComponentTransfer>
+            <feBlend in="soft" in2="SourceGraphic" mode="multiply" result="paper"/>
+            <feComposite in="paper" in2="SourceGraphic" operator="in"/>
+          </filter>
+          <clipPath id="screen"><rect x="295" y="270" width="434" height="330" rx="58"/></clipPath>
+          <linearGradient id="scanline" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DCE6C2" stop-opacity="0"/><stop offset="1" stop-color="#DCE6C2" stop-opacity=".16"/></linearGradient>
+        </defs>
+        <rect width="1024" height="1024" rx="205" fill="url(#tile)"/>
+        <rect x="2" y="2" width="1020" height="1020" rx="203" fill="none" stroke="#2C3329" stroke-width="4"/>
+        <g filter="url(#paper)"><path d="M239.6,249.7 Q246.0,168.0 328.0,168.0 L696.0,168.0 Q778.0,168.0 784.4,249.7 L829.8,828.2 Q834.0,882.0 780.0,882.0 L244.0,882.0 Q190.0,882.0 194.2,828.2 Z M295.0,328.0 Q295.0,270.0 353.0,270.0 L671.0,270.0 Q729.0,270.0 729.0,328.0 L729.0,542.0 Q729.0,600.0 671.0,600.0 L353.0,600.0 Q295.0,600.0 295.0,542.0 Z" fill-rule="evenodd" fill="url(#sage)"/></g>
+        <g clip-path="url(#screen)">
+          <rect class="scan" x="295" y="200" width="434" height="70" fill="url(#scanline)"/>
+          <text x="345" y="460" font-family="Syne Mono, monospace" font-size="92" fill="#BCC79F">&gt;</text>
+          <rect class="cursor" x="410" y="388" width="46" height="80" rx="6" fill="#DCE6C2"/>
+        </g>
+        <rect x="580" y="718" width="184" height="26" rx="13" fill="#161C16"/>
+      </svg>
+    </div>
+  </header>
+
+  <section class="wrap" id="how">
+    <h2 class="reveal">From Xcode project to signed IPA.</h2>
+    <p class="sub reveal" style="--d:.08s">OpenFruit reads your <code>.xcodeproj</code> or <code>.xcworkspace</code> as Xcode does, with Apple's original SDK, and runs the whole pipeline natively on Windows. Your project is never patched: the build environment adapts to it.</p>
+    <div class="terminal reveal" style="--d:.12s">
+      <div class="bar"><i></i><i></i><i></i><span>PowerShell — openfruit</span></div>
+      <pre id="term" aria-label="Example OpenFruit build output"></pre>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="pipeline">
+      <div class="step reveal" style="--d:.00s"><div class="dot">01</div><b>Project</b><span>pbxproj · xcconfig</span></div>
+      <div class="step reveal" style="--d:.05s"><div class="dot">02</div><b>Packages</b><span>SwiftPM · Pods</span></div>
+      <div class="step reveal" style="--d:.10s"><div class="dot">03</div><b>Compile</b><span>Swift · ObjC · C++</span></div>
+      <div class="step reveal" style="--d:.15s"><div class="dot">04</div><b>Macros</b><span>original plugins</span></div>
+      <div class="step reveal" style="--d:.20s"><div class="dot">05</div><b>Resources</b><span>assets · storyboards</span></div>
+      <div class="step reveal" style="--d:.25s"><div class="dot">06</div><b>Link</b><span>Mach-O arm64</span></div>
+      <div class="step reveal" style="--d:.30s"><div class="dot">07</div><b>Sign</b><span>your profile</span></div>
+      <div class="step reveal" style="--d:.35s"><div class="dot">08</div><b>IPA</b><span>install over USB</span></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="download">
+    <h2 class="reveal">Two projects, one goal.</h2>
+    <p class="sub reveal" style="--d:.08s">The engine that builds, and the IDE that makes it approachable. Both free, both open source.</p>
+    <div class="grid">
+      <article class="card reveal">
+        <span class="tag">// the engine</span>
+        <h3>OpenFruit Core</h3>
+        <p>A native Windows CLI, written in C++, that builds existing iOS projects end to end.</p>
+        <ul>
+          <li>Swift, Objective-C, C and C++ for iOS arm64</li>
+          <li>SwiftPM and CocoaPods dependencies</li>
+          <li>Asset catalogs, Icon Composer icons, storyboards</li>
+          <li>Incremental, cached builds</li>
+        </ul>
+        <a class="btn btn-primary" data-release="core" href="https://github.com/ssilvestri15/openfruit/releases">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+          <span class="label">Download Core<small data-version>latest release</small></span>
+        </a>
+      </article>
+      <article class="card reveal" style="--d:.1s">
+        <span class="tag">// the IDE</span>
+        <h3>OpenFruit Studio</h3>
+        <p>An IDE built on top of OpenFruit, for people who want to experiment, write the code themselves and learn how software really works.</p>
+        <ul>
+          <li>Edit, build and run from one place</li>
+          <li>Powered by the OpenFruit engine</li>
+          <li>Made for learning and curiosity</li>
+          <li>Free, for Windows</li>
+        </ul>
+        <a class="btn btn-ghost" data-release="studio" href="https://github.com/ssilvestri15/openfruit-studio/releases">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="m8 21 4-4 4 4M7 9l2 2-2 2m5 0h4"/></svg>
+          <span class="label">Download Studio<small data-version>latest release</small></span>
+        </a>
+      </article>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <h2 class="reveal">Tested on real apps.</h2>
+    <p class="sub reveal" style="--d:.08s">Unmodified upstream projects, built with the iOS 27.2 SDK.</p>
+    <div class="apps">
+      <div class="app reveal">CampUS <span>SwiftUI</span></div>
+      <div class="app reveal" style="--d:.05s">Delta <span>emulator</span></div>
+      <div class="app reveal" style="--d:.10s">VLC for iOS <span>media player</span></div>
+      <div class="app reveal" style="--d:.15s">Swiftfin <span>Jellyfin client</span></div>
+      <div class="app reveal" style="--d:.20s">Nextcloud <span>SwiftUI + storyboards</span></div>
+    </div>
+  </section>
+
+  <section class="wrap manifesto">
+    <blockquote class="reveal">Knowledge belongs to everyone. <em>Always.</em></blockquote>
+    <p class="reveal" style="--d:.1s">— and it should always be accessible.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a href="https://github.com/ssilvestri15/openfruit">openfruit</a> ·
+      <a href="https://github.com/ssilvestri15/openfruit-studio">openfruit-studio</a> ·
+      GPL-2.0-or-later
+    </div>
+    <p class="legal">OpenFruit is an independent project, not affiliated with or endorsed by Apple Inc. Xcode, iOS, Swift and the iOS SDK are Apple software and trademarks; OpenFruit does not redistribute them, and each user obtains them with their own Apple account.</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Reveal on scroll.
+  const io = new IntersectionObserver(entries => {
+    for (const entry of entries) if (entry.isIntersecting) { entry.target.classList.add("in"); io.unobserve(entry.target); }
+  }, { threshold: 0.15 });
+  document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+  // What is already on screen appears even before the observer reports it.
+  setTimeout(() => document.querySelectorAll(".reveal").forEach(el => {
+    if (el.getBoundingClientRect().top < innerHeight) el.classList.add("in");
+  }), 60);
+
+  // Card spotlight follows the pointer.
+  document.querySelectorAll(".card").forEach(card => card.addEventListener("pointermove", e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    card.style.setProperty("--my", `${e.clientY - r.top}px`);
+  }));
+
+  // Download buttons point at the newest published release (prereleases
+  // included) and its matching asset; without one they open the Releases page.
+  const sources = {
+    core: { repo: "ssilvestri15/openfruit", asset: /windows-x64\.zip$/i },
+    studio: { repo: "ssilvestri15/openfruit-studio", asset: /\.(exe|msi|msix|zip)$/i },
+  };
+  for (const [key, source] of Object.entries(sources)) {
+    fetch(`https://api.github.com/repos/${source.repo}/releases?per_page=10`, { headers: { Accept: "application/vnd.github+json" } })
+      .then(r => r.ok ? r.json() : [])
+      .then(releases => {
+        const release = (Array.isArray(releases) ? releases : []).find(r => !r.draft);
+        if (!release) return;
+        const asset = (release.assets || []).find(a => source.asset.test(a.name));
+        document.querySelectorAll(`[data-release="${key}"]`).forEach(link => {
+          link.href = asset ? asset.browser_download_url : release.html_url;
+          const label = link.querySelector("[data-version]");
+          if (label) label.textContent = `${release.tag_name}${release.prerelease ? " · prerelease" : ""}`;
+        });
+      })
+      .catch(() => {});
+  }
+
+  // Terminal: an example build, typed line by line.
+  const lines = [
+    ["p", "PS> ", "openfruit build .\\Nextcloud.xcodeproj --scheme Nextcloud"],
+    ["dim", "", "  selected Swift 6.4.1 toolchain for Xcode 27.2"],
+    ["dim", "", "  resolving package graph natively… 41 packages"],
+    ["dim", "", "  SwiftPM: package inputs unchanged, build skipped"],
+    ["dim", "", "  Swift module Nextcloud is up to date"],
+    ["dim", "", "  compiling asset catalogs · storyboards (OpenIB)"],
+    ["dim", "", "  Mach-O link is up to date"],
+    ["dim", "", "  signing app bundle natively with zsign…"],
+    ["ok", "", "✓ Signed IPA ready: Nextcloud-signed.ipa  (39 s)"],
+    ["p", "PS> ", "openfruit device install .\\Nextcloud-signed.ipa"],
+    ["ok", "", "✓ installed on iPhone"],
+  ];
+  const term = document.getElementById("term");
+  const render = (count, partial) => {
+    let html = "";
+    lines.slice(0, count).forEach(([cls, prompt, text]) => {
+      html += `<span class="${cls}">${prompt}</span>${cls === "p" ? text : `<span class="${cls}">${text}</span>`}\n`;
+    });
+    if (partial) html += partial;
+    term.innerHTML = html + '<span class="caret"></span>';
+  };
+  if (reduced) { render(lines.length); return; }
+  let started = false;
+  const play = async () => {
+    for (;;) {
+      for (let i = 0; i < lines.length; i++) {
+        const [cls, prompt, text] = lines[i];
+        if (cls === "p") {
+          for (let c = 1; c <= text.length; c++) {
+            render(i, `<span class="p">${prompt}</span>${text.slice(0, c)}`);
+            await new Promise(r => setTimeout(r, 28 + Math.random() * 40));
+          }
+          await new Promise(r => setTimeout(r, 380));
+        } else {
+          await new Promise(r => setTimeout(r, 260 + Math.random() * 260));
+        }
+        render(i + 1);
+      }
+      await new Promise(r => setTimeout(r, 4200));
+    }
+  };
+  new IntersectionObserver((entries, obs) => {
+    if (entries[0].isIntersecting && !started) { started = true; obs.disconnect(); play(); }
+  }, { threshold: 0.3 }).observe(term);
+  render(0);
+})();
+</script>
+</body>
+</html>
