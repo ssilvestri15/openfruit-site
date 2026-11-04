@@ -87,7 +87,7 @@ nav .links a:hover { color: var(--sage-1); }
 .eyebrow { font-family: var(--mono); color: var(--sage-4); font-size: .9rem; letter-spacing: .04em; display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--tile) 70%, transparent); }
 .eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--sage-3); box-shadow: 0 0 0 0 var(--sage-3); animation: pulse 2.2s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sage-3) 70%, transparent); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
-h1 { font-size: clamp(2.4rem, 12vw, 6.2rem); line-height: .95; margin: 22px 0 18px; font-weight: 800; letter-spacing: -.02em; }
+h1 { font-size: clamp(2.4rem, min(12vw, 6.6vw + 1rem), 5.4rem); line-height: .95; margin: 22px 0 18px; font-weight: 800; letter-spacing: -.02em; }
 h1 .word { display: inline-block; background: linear-gradient(100deg, var(--sage-1), var(--sage-3) 45%, var(--sage-5) 70%, var(--sage-1)); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sheen 7s ease-in-out infinite; }
 @keyframes sheen { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 .lead { font-size: clamp(1.15rem, 2.2vw, 1.45rem); color: var(--sage-2); max-width: 34ch; margin: 0 0 30px; }
@@ -179,6 +179,70 @@ h2 { font-size: clamp(2rem, 4.5vw, 3.1rem); line-height: 1.05; margin: 0 0 14px;
 .manifesto blockquote em { font-style: normal; color: var(--sage-4); }
 .manifesto p { font-family: var(--mono); color: var(--muted); margin-top: 22px; }
 
+/* Architecture */
+.arch { display: grid; gap: 18px; }
+.arch .node { position: relative; border-radius: 18px; border: 1px solid var(--line); background: linear-gradient(170deg, var(--tile-2), var(--bg-2)); padding: 18px 20px; }
+.arch .node h4 { margin: 0 0 4px; font-size: 1.05rem; color: var(--sage-1); }
+.arch .node p { margin: 0; font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.arch .cli { text-align: center; max-width: 420px; margin: 0 auto; border-color: var(--deep); box-shadow: 0 0 0 1px color-mix(in srgb, var(--sage-5) 25%, transparent), 0 30px 60px -30px color-mix(in srgb, var(--sage-3) 50%, transparent); }
+.arch .cli h4 { font-size: 1.3rem; }
+.flow { position: relative; height: 34px; margin: -6px auto; width: 2px; background: repeating-linear-gradient(180deg, var(--sage-5) 0 6px, transparent 6px 12px); background-size: 2px 24px; animation: flow 1s linear infinite; }
+@keyframes flow { to { background-position: 0 24px; } }
+.lane { border: 1px dashed color-mix(in srgb, var(--sage-5) 40%, transparent); border-radius: 22px; padding: 16px; }
+.lane > b { display: block; font-family: var(--mono); font-weight: 400; font-size: .8rem; color: var(--sage-4); margin: 0 0 12px 4px; letter-spacing: .04em; }
+.stages { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+.stages .node { padding: 12px 10px; text-align: center; }
+.stages .node h4 { font-size: .9rem; }
+.stages .node p { font-size: .7rem; }
+.stages .node.lit { animation: lit 8s infinite; animation-delay: calc(var(--i) * 1s); }
+@keyframes lit { 0%, 14%, 100% { border-color: var(--line); } 4% { border-color: var(--sage-3); box-shadow: 0 0 24px -6px color-mix(in srgb, var(--sage-3) 70%, transparent); } }
+.tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tiers .node { padding-top: 34px; }
+.tiers .node::before { content: attr(data-n); position: absolute; top: 12px; left: 18px; font-family: var(--mono); font-size: .75rem; color: var(--sage-4); }
+.tiers .node:not(:last-child)::after { content: "if impossible →"; position: absolute; right: -6px; top: 12px; transform: translateX(100%); font-family: var(--mono); font-size: .62rem; color: var(--muted); white-space: nowrap; display: none; }
+.state { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.arch-bottom { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+.modules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 26px; }
+.module { padding: 20px; border-radius: 18px; background: var(--tile); border: 1px solid var(--line); transition: transform .3s, border-color .3s; }
+.module:hover { transform: translateY(-4px); border-color: var(--deep); }
+.module i { font-style: normal; font-family: var(--mono); font-size: .75rem; color: var(--sage-4); }
+.module h4 { margin: 6px 0 6px; color: var(--sage-1); font-size: 1.05rem; }
+.module p { margin: 0; font-size: .92rem; color: var(--sage-2); }
+
+/* Get started */
+.start { display: grid; grid-template-columns: .9fr 1.1fr; gap: 22px; align-items: start; }
+.req { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.req li { display: grid; grid-template-columns: 26px 1fr; gap: 8px; color: var(--sage-2); }
+.req li::before { content: "✓"; color: var(--sage-3); font-family: var(--mono); }
+.code { position: relative; border-radius: 18px; background: var(--tile); border: 1px solid var(--line); margin-bottom: 14px; }
+.code .head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: .78rem; color: var(--muted); }
+.code pre { margin: 0; padding: 14px 16px; font-family: var(--mono); font-size: .86rem; color: var(--sage-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.copy { font: inherit; color: var(--sage-3); background: none; border: 1px solid var(--line); border-radius: 8px; padding: 3px 10px; cursor: pointer; transition: background .2s, color .2s; }
+.copy:hover { background: var(--line); color: var(--sage-1); }
+
+/* Limits and FAQ */
+.limits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; list-style: none; padding: 0; margin: 0; }
+.limits li { padding: 16px 18px; border-radius: 16px; background: var(--tile); border: 1px solid var(--line); color: var(--sage-2); font-size: .95rem; }
+.limits b { color: var(--sage-1); display: block; margin-bottom: 2px; }
+.faq details { border-bottom: 1px solid var(--line); padding: 18px 4px; }
+.faq summary { cursor: pointer; list-style: none; font-weight: 700; font-size: 1.12rem; color: var(--sage-1); display: flex; justify-content: space-between; gap: 18px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-family: var(--mono); color: var(--sage-4); transition: transform .3s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { margin: 12px 0 0; color: var(--sage-2); max-width: 72ch; }
+code { font-family: var(--mono); font-size: .92em; color: var(--sage-1); }
+
+@media (max-width: 880px) {
+  .stages { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .arch-bottom, .start { grid-template-columns: minmax(0, 1fr); }
+  .modules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .limits { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .stages, .tiers, .state, .modules { grid-template-columns: minmax(0, 1fr); }
+  .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 footer { border-top: 1px solid var(--line); padding: 34px 0 48px; color: var(--muted); font-size: .9rem; }
 footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; }
 footer a { color: var(--sage-3); text-decoration: none; }
@@ -217,6 +281,8 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
     <div class="links">
       <a href="#download">Download</a>
       <a class="hide-sm" href="#how">How it works</a>
+      <a class="hide-sm" href="#architecture">Architecture</a>
+      <a class="hide-sm" href="#start">Get started</a>
       <a href="https://github.com/ssilvestri15/openfruit">GitHub</a>
     </div>
   </div>
@@ -291,6 +357,53 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
     </div>
   </section>
 
+  <section class="wrap" id="architecture">
+    <h2 class="reveal">Architecture.</h2>
+    <p class="sub reveal" style="--d:.08s">A single native CLI drives the whole pipeline. Tools and toolchains are installed once under <code>%LOCALAPPDATA%\OPENFRUIT</code>; your configuration and credentials stay under <code>%USERPROFILE%\.OPENFRUIT</code>.</p>
+    <div class="arch">
+      <div class="node cli reveal"><h4>openfruit.exe</h4><p>native C++ CLI · orchestrates every stage</p></div>
+      <div class="flow" aria-hidden="true"></div>
+      <div class="lane reveal" style="--d:.06s">
+        <b>BUILD PIPELINE</b>
+        <div class="stages">
+          <div class="node lit" style="--i:0"><h4>Project</h4><p>build settings</p></div>
+          <div class="node lit" style="--i:1"><h4>Dependencies</h4><p>SwiftPM · Pods</p></div>
+          <div class="node lit" style="--i:2"><h4>Compile</h4><p>Swift · ObjC · C++</p></div>
+          <div class="node lit" style="--i:3"><h4>Resources</h4><p>assets · storyboards</p></div>
+          <div class="node lit" style="--i:4"><h4>Link</h4><p>Mach-O</p></div>
+          <div class="node lit" style="--i:5"><h4>Bundle</h4><p>app · frameworks</p></div>
+          <div class="node lit" style="--i:6"><h4>Signing</h4><p>provisioning</p></div>
+          <div class="node lit" style="--i:7"><h4>IPA</h4><p>signed</p></div>
+        </div>
+      </div>
+      <div class="arch-bottom">
+        <div class="lane reveal" style="--d:.1s">
+          <b>MACROS AND COMPILER PLUGINS · IN ORDER OF PREFERENCE</b>
+          <div class="tiers">
+            <div class="node" data-n="01"><h4>Native host</h4><p>plugin built from source for Windows</p></div>
+            <div class="node" data-n="02"><h4>Darwin host</h4><p>original Mach-O plugin, emulated with Unicorn</p></div>
+            <div class="node" data-n="03"><h4>Unsupported</h4><p>an explicit error, never a substitute</p></div>
+          </div>
+        </div>
+        <div class="lane reveal" style="--d:.14s">
+          <b>MANAGED STATE</b>
+          <div class="state">
+            <div class="node"><h4>%LOCALAPPDATA%</h4><p>bin · sdk · toolchains · cache</p></div>
+            <div class="node"><h4>%USERPROFILE%</h4><p>config · credentials · journals</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modules">
+      <div class="module reveal"><i>01</i><h4>Project interpretation</h4><p>Reads <code>.pbxproj</code>, <code>.xcconfig</code> and schemes like Xcode, keeping Base SDK and deployment target apart.</p></div>
+      <div class="module reveal" style="--d:.05s"><i>02</i><h4>Package engine</h4><p>Resolves and builds SwiftPM graphs in isolated, cached workspaces; CocoaPods and Carthage too.</p></div>
+      <div class="module reveal" style="--d:.1s"><i>03</i><h4>Compiler proxy</h4><p>Runs the official Swift and Clang drivers with explicit modules and a shared compilation cache.</p></div>
+      <div class="module reveal" style="--d:.15s"><i>04</i><h4>Resource compilers</h4><p>Asset catalogs, Icon Composer icons, Core Data, strings and storyboards through OpenIB.</p></div>
+      <div class="module reveal" style="--d:.2s"><i>05</i><h4>Build driver</h4><p>Incremental per target: unchanged modules and links are skipped, edits rebuild only what changed.</p></div>
+      <div class="module reveal" style="--d:.25s"><i>06</i><h4>Packaging &amp; signing</h4><p>Bundles frameworks and extensions, signs with your certificate and profile, writes the IPA.</p></div>
+    </div>
+  </section>
+
   <section class="wrap" id="download">
     <h2 class="reveal">Two projects, one goal.</h2>
     <p class="sub reveal" style="--d:.08s">The engine that builds, and the IDE that makes it approachable. Both free, both open source.</p>
@@ -340,6 +453,50 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
     </div>
   </section>
 
+  <section class="wrap" id="start">
+    <h2 class="reveal">Get started.</h2>
+    <div class="start">
+      <ul class="req reveal">
+        <li>Windows 10 or 11, x64</li>
+        <li>Git for Windows</li>
+        <li>Visual Studio Build Tools with C++ and CMake, only to build OpenFruit from source</li>
+        <li>An Apple Developer account: the iOS SDK is downloaded from Apple with your own account, and apps are signed with your certificate and profile</li>
+        <li>The Apple Devices app or iTunes, to install over USB</li>
+      </ul>
+      <div class="reveal" style="--d:.08s">
+        <div class="code"><div class="head"><span>Install</span><button class="copy" type="button">copy</button></div><pre>git clone https://github.com/ssilvestri15/openfruit.git
+cd openfruit
+.\openfruit\windows\build.ps1 -WithTests
+openfruit bootstrap</pre></div>
+        <div class="code"><div class="head"><span>Build and install an app</span><button class="copy" type="button">copy</button></div><pre>openfruit build C:\path\to\MyApp.xcodeproj --scheme MyApp
+openfruit devices
+openfruit device install C:\path\to\MyApp-signed.ipa --udid &lt;UDID&gt;</pre></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <h2 class="reveal">Known limitations.</h2>
+    <p class="sub reveal" style="--d:.08s">OpenFruit is experimental. This is what it does not do yet.</p>
+    <ul class="limits">
+      <li class="reveal"><b>iOS only</b>watchOS and visionOS targets and assets are not built.</li>
+      <li class="reveal" style="--d:.05s"><b>Extensions need a matching profile</b>Extensions your provisioning profile does not authorize are removed from the signed app.</li>
+      <li class="reveal" style="--d:.1s"><b>Flattened Icon Composer icons</b>Layers and tints are composed into one image; Liquid Glass effects are not rendered.</li>
+      <li class="reveal" style="--d:.15s"><b>Some package resources</b>Resources SwiftPM leaves to the build system, such as a package's asset catalog, are not built yet.</li>
+      <li class="reveal" style="--d:.2s"><b>Swift 4 packages</b>App targets in Swift 4 mode build as Xcode does; packages still in Swift 4 mode can fail.</li>
+      <li class="reveal" style="--d:.25s"><b>Team-only capabilities</b>App groups and similar entitlements can only be provisioned by the team that owns them.</li>
+    </ul>
+  </section>
+
+  <section class="wrap faq">
+    <h2 class="reveal">Questions.</h2>
+    <details class="reveal"><summary>Do I need a Mac?</summary><p>No. The whole pipeline runs natively on Windows, without macOS, virtual machines or WSL. You do need an Apple Developer account for the SDK and for signing.</p></details>
+    <details class="reveal"><summary>Does OpenFruit redistribute Apple software?</summary><p>No. Xcode, the iOS SDK and Apple's compiler plugins are downloaded by each user from Apple with their own account. OpenFruit ships only its own code and open-source components.</p></details>
+    <details class="reveal"><summary>Do I have to change my project?</summary><p>No, and OpenFruit will never patch it. It reads the same project files Xcode reads; when something fails, the fix goes into OpenFruit as general Xcode semantics, never into your project or its dependencies.</p></details>
+    <details class="reveal"><summary>How fast is it?</summary><p>A first build compiles everything and downloads what it needs. After that, builds are incremental and cached: a warm rebuild of Nextcloud takes about 40 seconds, and editing one file recompiles and relinks only what changed.</p></details>
+    <details class="reveal"><summary>Can I install the app on my iPhone?</summary><p>Yes, over USB: <code>openfruit device install</code> talks to the device natively. The app is signed with your own certificate and provisioning profile.</p></details>
+  </section>
+
   <section class="wrap manifesto">
     <blockquote class="reveal">Knowledge belongs to everyone. <em>Always.</em></blockquote>
     <p class="reveal" style="--d:.1s">— and it should always be accessible.</p>
@@ -376,6 +533,15 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
     const r = card.getBoundingClientRect();
     card.style.setProperty("--mx", `${e.clientX - r.left}px`);
     card.style.setProperty("--my", `${e.clientY - r.top}px`);
+  }));
+
+  // Copy buttons of the command blocks.
+  document.querySelectorAll(".code .copy").forEach(button => button.addEventListener("click", () => {
+    const text = button.closest(".code").querySelector("pre").textContent;
+    navigator.clipboard?.writeText(text).then(() => {
+      button.textContent = "copied";
+      setTimeout(() => { button.textContent = "copy"; }, 1600);
+    }).catch(() => {});
   }));
 
   // Download buttons point at the newest published release (prereleases
