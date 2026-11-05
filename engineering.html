@@ -44,7 +44,8 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   margin: 0;
   background: var(--bg);
@@ -59,6 +60,10 @@ body {
 a { color: var(--sage-1); text-decoration-color: color-mix(in srgb, var(--sage-3) 50%, transparent); text-underline-offset: 3px; }
 a:hover { text-decoration-color: var(--sage-1); }
 .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+:focus-visible { outline: 2px solid var(--sage-1); outline-offset: 3px; border-radius: 4px; }
+.skip { position: absolute; left: 16px; top: -60px; z-index: 100; padding: 10px 16px; border-radius: 10px; background: var(--sage-1); color: var(--bg); font-weight: 600; text-decoration: none; }
+.skip:focus { top: 12px; }
+article:focus { outline: none; }
 
 .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
 .ambient span {
@@ -69,12 +74,12 @@ a:hover { text-decoration-color: var(--sage-1); }
 .ambient span:nth-child(1) { top: -18vmax; left: -12vmax; }
 .ambient span:nth-child(2) { bottom: -22vmax; right: -14vmax; opacity: .1; background: radial-gradient(circle, var(--sage-5), transparent 62%); }
 
-nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
-nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+nav[aria-label="Site"] { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+nav[aria-label="Site"] .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
 .brand { font-family: var(--display); display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; letter-spacing: .02em; font-size: 1.05rem; color: var(--sage-1); }
 .brand img { width: 30px; height: 30px; }
 nav .links { display: flex; gap: 22px; font-family: var(--label); font-size: .9rem; }
-nav .links a { text-decoration: none; color: var(--muted); transition: color .2s; }
+nav .links a { text-decoration: none; color: var(--muted); transition: color .2s; display: inline-block; padding: 6px 2px; }
 nav .links a:hover { color: var(--sage-1); }
 
 .layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 56px; padding: 56px 0 40px; }
@@ -82,7 +87,7 @@ nav .links a:hover { color: var(--sage-1); }
 .toc b { font-family: var(--label); display: block; color: var(--sage-4); font-weight: 400; letter-spacing: .04em; margin-bottom: 10px; }
 .toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: toc; }
 .toc li { counter-increment: toc; }
-.toc a { color: var(--muted); text-decoration: none; display: flex; gap: 10px; }
+.toc a { color: var(--muted); text-decoration: none; display: flex; gap: 10px; padding: 2px 0; }
 .toc a::before { content: counter(toc, decimal-leading-zero); color: var(--sage-5); font-family: var(--label); }
 .toc a:hover { color: var(--sage-1); }
 
@@ -117,7 +122,7 @@ tr:last-child td { border-bottom: 0; }
 
 footer { border-top: 1px solid var(--line); padding: 34px 0 48px; color: var(--muted); font-size: .9rem; }
 footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; }
-footer a { color: var(--sage-3); text-decoration: none; }
+footer a { color: var(--sage-3); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--sage-3) 55%, transparent); text-underline-offset: 3px; }
 footer a:hover { color: var(--sage-1); }
 footer .legal { max-width: 70ch; font-size: .8rem; }
 
@@ -129,9 +134,10 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
 </style>
 </head>
 <body>
+<a class="skip" href="#content">Skip to content</a>
 <div class="ambient" aria-hidden="true"><span></span><span></span></div>
 
-<nav>
+<nav aria-label="Site">
   <div class="wrap">
     <a class="brand" href="./"><img src="assets/openfruit-icon.svg" alt="">OpenFruit</a>
     <div class="links">
@@ -143,7 +149,7 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
 </nav>
 
 <main class="wrap layout">
-  <aside class="toc" aria-label="Contents">
+  <nav class="toc" aria-label="Contents">
     <b>Contents</b>
     <ol>
       <li><a href="#problem">The problem</a></li>
@@ -154,9 +160,9 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
       <li><a href="#signing">Signing and installing</a></li>
       <li><a href="#results">Where it stands</a></li>
     </ol>
-  </aside>
+  </nav>
 
-  <article>
+  <article id="content" tabindex="-1">
     <span class="eyebrow">engineering notes</span>
     <h1>Building iOS apps on Windows: what it actually takes</h1>
     <p class="lead">OpenFruit builds unmodified Xcode projects into signed iOS apps natively on Windows. This page is about the parts that turned out to be hard, and how each one is solved.</p>
@@ -179,7 +185,7 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
     <p>Each configuration can point to a base <code>.xcconfig</code> through <code>baseConfigurationReference</code>. Those files can <code>#include</code> others, or <code>#include?</code> them, which silently skips a missing file. <code>$(inherited)</code> and <code>${inherited}</code> expand to the value from the level below, and values go through Xcode's modifiers, for example <code>$(PRODUCT_NAME:c99extidentifier)</code> to turn a product name into a valid identifier.</p>
     <h3>Conditional settings</h3>
     <p>Settings can be qualified, and several qualified forms of the same key can coexist:</p>
-<pre><code>OTHER_SWIFT_FLAGS = -DBASE
+<pre tabindex="0"><code>OTHER_SWIFT_FLAGS = -DBASE
 OTHER_SWIFT_FLAGS[sdk=iphoneos*] = $(inherited) -DDEVICE
 OTHER_SWIFT_FLAGS[config=Debug][arch=arm64] = $(inherited) -DDEBUG_ARM64</code></pre>
     <p>OpenFruit evaluates <code>config</code>, <code>sdk</code>, <code>arch</code> and <code>variant</code> against the real build (for example <code>iphoneos</code>, <code>arm64</code>, <code>normal</code>). When several forms match, the most specific one wins: more conditions first, then more literal characters in the patterns. Configuration names are matched case-sensitively, as Swift Build does with <code>fnmatch</code>; SDK and architecture patterns are not. An unknown or malformed condition stops the build with an error instead of being guessed.</p>
@@ -252,9 +258,9 @@ OTHER_SWIFT_FLAGS[config=Debug][arch=arm64] = $(inherited) -DDEBUG_ARM64</code><
 
     <h2 id="results"><span class="n">06</span>Where it stands</h2>
     <p>These open-source apps build from a clean checkout into a signed IPA, with no changes to their repositories (<code>git status</code> stays empty), arm64, iOS 27.2 SDK:</p>
-    <div class="table-wrap">
+    <div class="table-wrap" role="region" aria-label="Apps built with OpenFruit" tabindex="0">
       <table>
-        <thead><tr><th>App</th><th>What it exercises</th><th>Result</th></tr></thead>
+        <thead><tr><th scope="col">App</th><th scope="col">What it exercises</th><th scope="col">Result</th></tr></thead>
         <tbody>
           <tr><td><a href="https://github.com/nextcloud/ios">Nextcloud</a></td><td>Large Swift and Objective-C app, many SwiftPM packages, storyboards, extensions</td><td>Signed IPA. About 41 minutes from a fresh install, 39 seconds when nothing changed</td></tr>
           <tr><td><a href="https://github.com/rileytestut/Delta">Delta</a></td><td>Workspace, C and C++ emulator cores, alternate icons</td><td>Signed IPA, installed and launched on an iPhone</td></tr>
