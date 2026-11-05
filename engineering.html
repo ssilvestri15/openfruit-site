@@ -257,15 +257,15 @@ OTHER_SWIFT_FLAGS[config=Debug][arch=arm64] = $(inherited) -DDEBUG_ARM64</code><
     <p>The only external piece is Apple's USB driver, which comes with the Apple Devices app.</p>
 
     <h2 id="results"><span class="n">06</span>Where it stands</h2>
-    <p>These open-source apps build from a clean checkout into a signed IPA, with no changes to their repositories (<code>git status</code> stays empty), arm64, iOS 27.2 SDK:</p>
+    <p>These open-source apps build from a clean checkout into a signed IPA that installs and runs on an iPhone, with no changes to their repositories (<code>git status</code> stays empty), arm64, iOS 27.2 SDK:</p>
     <div class="table-wrap" role="region" aria-label="Apps built with OpenFruit" tabindex="0">
       <table>
         <thead><tr><th scope="col">App</th><th scope="col">What it exercises</th><th scope="col">Result</th></tr></thead>
         <tbody>
-          <tr><td><a href="https://github.com/nextcloud/ios">Nextcloud</a></td><td>Large Swift and Objective-C app, many SwiftPM packages, storyboards, extensions</td><td>Signed IPA. About 41 minutes from a fresh install, 39 seconds when nothing changed</td></tr>
+          <tr><td><a href="https://github.com/nextcloud/ios">Nextcloud</a></td><td>Large Swift and Objective-C app, many SwiftPM packages, storyboards, extensions</td><td>Signed IPA, installed and launched on an iPhone</td></tr>
           <tr><td><a href="https://github.com/rileytestut/Delta">Delta</a></td><td>Workspace, C and C++ emulator cores, alternate icons</td><td>Signed IPA, installed and launched on an iPhone</td></tr>
-          <tr><td><a href="https://github.com/videolan/vlc-ios">VLC</a></td><td>CocoaPods, XCFrameworks, a Swift 4 extension</td><td>Signed IPA, installed and launched</td></tr>
-          <tr><td><a href="https://github.com/jellyfin/Swiftfin">Swiftfin</a></td><td>SwiftUI and Apple macros, Icon Composer icons</td><td>Signed IPA</td></tr>
+          <tr><td><a href="https://github.com/videolan/vlc-ios">VLC</a></td><td>CocoaPods, XCFrameworks, a Swift 4 extension</td><td>Signed IPA, installed and launched on an iPhone</td></tr>
+          <tr><td><a href="https://github.com/jellyfin/Swiftfin">Swiftfin</a></td><td>SwiftUI and Apple macros, Icon Composer icons</td><td>Signed IPA, installed and launched on an iPhone</td></tr>
         </tbody>
       </table>
     </div>
