@@ -35,14 +35,15 @@
   --sage-4: #A9B48F;
   --sage-5: #97A27D;
   --text: #C9D3B3;
-  --muted: #8E977B;
+  --muted: #9CA58A;
   --radius: 22px;
   --sans: "Syne", ui-sans-serif, system-ui, sans-serif;
   --mono: "Syne Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   margin: 0;
   background: var(--bg);
@@ -67,6 +68,10 @@ body::before {
 }
 a { color: inherit; }
 .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+:focus-visible { outline: 2px solid var(--sage-1); outline-offset: 3px; border-radius: 4px; }
+.skip { position: absolute; left: 16px; top: -60px; z-index: 200; padding: 10px 16px; border-radius: 10px; background: var(--sage-1); color: var(--bg); font-weight: 700; text-decoration: none; }
+.skip:focus { top: 12px; }
+main:focus { outline: none; }
 
 /* Ambient light blobs */
 .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
@@ -86,7 +91,7 @@ nav .wrap { display: flex; align-items: center; justify-content: space-between; 
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; letter-spacing: .02em; font-size: 1.05rem; color: var(--sage-1); }
 .brand img { width: 30px; height: 30px; }
 nav .links { display: flex; gap: 22px; font-family: var(--mono); font-size: .9rem; }
-nav .links a { text-decoration: none; color: var(--muted); transition: color .2s; }
+nav .links a { text-decoration: none; color: var(--muted); transition: color .2s; display: inline-block; padding: 6px 2px; }
 nav .links a:hover { color: var(--sage-1); }
 
 /* Hero */
@@ -189,17 +194,17 @@ h2 { font-size: clamp(2rem, 4.5vw, 3.1rem); line-height: 1.05; margin: 0 0 14px;
 /* Architecture */
 .arch { display: grid; gap: 18px; }
 .arch .node { position: relative; border-radius: 18px; border: 1px solid var(--line); background: linear-gradient(170deg, var(--tile-2), var(--bg-2)); padding: 18px 20px; }
-.arch .node h4 { margin: 0 0 4px; font-size: 1.05rem; color: var(--sage-1); }
+.arch .node h3 { margin: 0 0 4px; font-size: 1.05rem; color: var(--sage-1); }
 .arch .node p { margin: 0; font-family: var(--mono); font-size: .8rem; color: var(--muted); }
 .arch .cli { text-align: center; max-width: 420px; margin: 0 auto; border-color: var(--deep); box-shadow: 0 0 0 1px color-mix(in srgb, var(--sage-5) 25%, transparent), 0 30px 60px -30px color-mix(in srgb, var(--sage-3) 50%, transparent); }
-.arch .cli h4 { font-size: 1.3rem; }
+.arch .cli h3 { font-size: 1.3rem; }
 .flow { position: relative; height: 34px; margin: -6px auto; width: 2px; background: repeating-linear-gradient(180deg, var(--sage-5) 0 6px, transparent 6px 12px); background-size: 2px 24px; animation: flow 1s linear infinite; }
 @keyframes flow { to { background-position: 0 24px; } }
 .lane { border: 1px dashed color-mix(in srgb, var(--sage-5) 40%, transparent); border-radius: 22px; padding: 16px; }
 .lane > b { display: block; font-family: var(--mono); font-weight: 400; font-size: .8rem; color: var(--sage-4); margin: 0 0 12px 4px; letter-spacing: .04em; }
 .stages { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
 .stages .node { padding: 12px 10px; text-align: center; }
-.stages .node h4 { font-size: .9rem; }
+.stages .node h3 { font-size: .9rem; }
 .stages .node p { font-size: .7rem; }
 .stages .node.lit { animation: lit 8s infinite; animation-delay: calc(var(--i) * 1s); }
 @keyframes lit { 0%, 14%, 100% { border-color: var(--line); } 4% { border-color: var(--sage-3); box-shadow: 0 0 24px -6px color-mix(in srgb, var(--sage-3) 70%, transparent); } }
@@ -213,7 +218,7 @@ h2 { font-size: clamp(2rem, 4.5vw, 3.1rem); line-height: 1.05; margin: 0 0 14px;
 .module { padding: 20px; border-radius: 18px; background: var(--tile); border: 1px solid var(--line); transition: transform .3s, border-color .3s; }
 .module:hover { transform: translateY(-4px); border-color: var(--deep); }
 .module i { font-style: normal; font-family: var(--mono); font-size: .75rem; color: var(--sage-4); }
-.module h4 { margin: 6px 0 6px; color: var(--sage-1); font-size: 1.05rem; }
+.module h3 { margin: 6px 0 6px; color: var(--sage-1); font-size: 1.05rem; }
 .module p { margin: 0; font-size: .92rem; color: var(--sage-2); }
 
 /* Get started */
@@ -252,7 +257,7 @@ code { font-family: var(--mono); font-size: .92em; color: var(--sage-1); }
 
 footer { border-top: 1px solid var(--line); padding: 34px 0 48px; color: var(--muted); font-size: .9rem; }
 footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; }
-footer a { color: var(--sage-3); text-decoration: none; }
+footer a { color: var(--sage-3); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--sage-3) 55%, transparent); text-underline-offset: 3px; }
 footer a:hover { color: var(--sage-1); }
 footer .legal { max-width: 70ch; font-size: .8rem; }
 
@@ -282,7 +287,8 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
 <body>
 <div class="ambient" aria-hidden="true"><span></span><span></span></div>
 
-<nav>
+<a class="skip" href="#top">Skip to content</a>
+<nav aria-label="Site">
   <div class="wrap">
     <a class="brand" href="#top"><img src="assets/openfruit-icon.svg" alt="">OpenFruit</a>
     <div class="links">
@@ -296,7 +302,7 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
   </div>
 </nav>
 
-<main id="top">
+<main id="top" tabindex="-1">
   <header class="wrap hero">
     <div>
       <span class="eyebrow reveal"><i></i>experimental · open source · GPL-2.0</span>
@@ -348,7 +354,7 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
     <p class="sub reveal" style="--d:.08s">OpenFruit reads your <code>.xcodeproj</code> or <code>.xcworkspace</code> as Xcode does, with Apple's original SDK, and runs the whole pipeline natively on Windows. Your project is never patched: the build environment adapts to it.</p>
     <div class="terminal reveal" style="--d:.12s">
       <div class="bar"><i></i><i></i><i></i><span>PowerShell — openfruit</span></div>
-      <pre id="term" aria-label="Example OpenFruit build output"></pre>
+      <pre id="term" role="img" aria-label="Example OpenFruit build output"></pre>
     </div>
   </section>
 
@@ -369,46 +375,46 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
     <h2 class="reveal">Architecture.</h2>
     <p class="sub reveal" style="--d:.08s">A single native CLI drives the whole pipeline. Tools and toolchains are installed once under <code>%LOCALAPPDATA%\OPENFRUIT</code>; your configuration and credentials stay under <code>%USERPROFILE%\.OPENFRUIT</code>.</p>
     <div class="arch">
-      <div class="node cli reveal"><h4>openfruit.exe</h4><p>native C++ CLI · orchestrates every stage</p></div>
+      <div class="node cli reveal"><h3>openfruit.exe</h3><p>native C++ CLI · orchestrates every stage</p></div>
       <div class="flow" aria-hidden="true"></div>
       <div class="lane reveal" style="--d:.06s">
         <b>BUILD PIPELINE</b>
         <div class="stages">
-          <div class="node lit" style="--i:0"><h4>Project</h4><p>build settings</p></div>
-          <div class="node lit" style="--i:1"><h4>Dependencies</h4><p>SwiftPM · Pods</p></div>
-          <div class="node lit" style="--i:2"><h4>Compile</h4><p>Swift · ObjC · C++</p></div>
-          <div class="node lit" style="--i:3"><h4>Resources</h4><p>assets · storyboards</p></div>
-          <div class="node lit" style="--i:4"><h4>Link</h4><p>Mach-O</p></div>
-          <div class="node lit" style="--i:5"><h4>Bundle</h4><p>app · frameworks</p></div>
-          <div class="node lit" style="--i:6"><h4>Signing</h4><p>provisioning</p></div>
-          <div class="node lit" style="--i:7"><h4>IPA</h4><p>signed</p></div>
+          <div class="node lit" style="--i:0"><h3>Project</h3><p>build settings</p></div>
+          <div class="node lit" style="--i:1"><h3>Dependencies</h3><p>SwiftPM · Pods</p></div>
+          <div class="node lit" style="--i:2"><h3>Compile</h3><p>Swift · ObjC · C++</p></div>
+          <div class="node lit" style="--i:3"><h3>Resources</h3><p>assets · storyboards</p></div>
+          <div class="node lit" style="--i:4"><h3>Link</h3><p>Mach-O</p></div>
+          <div class="node lit" style="--i:5"><h3>Bundle</h3><p>app · frameworks</p></div>
+          <div class="node lit" style="--i:6"><h3>Signing</h3><p>provisioning</p></div>
+          <div class="node lit" style="--i:7"><h3>IPA</h3><p>signed</p></div>
         </div>
       </div>
       <div class="arch-bottom">
         <div class="lane reveal" style="--d:.1s">
           <b>MACROS AND COMPILER PLUGINS · IN ORDER OF PREFERENCE</b>
           <div class="tiers">
-            <div class="node" data-n="01"><h4>Native host</h4><p>plugin built from source for Windows</p></div>
-            <div class="node" data-n="02"><h4>Darwin host</h4><p>original Mach-O plugin, emulated with Unicorn</p></div>
-            <div class="node" data-n="03"><h4>Unsupported</h4><p>an explicit error, never a substitute</p></div>
+            <div class="node" data-n="01"><h3>Native host</h3><p>plugin built from source for Windows</p></div>
+            <div class="node" data-n="02"><h3>Darwin host</h3><p>original Mach-O plugin, emulated with Unicorn</p></div>
+            <div class="node" data-n="03"><h3>Unsupported</h3><p>an explicit error, never a substitute</p></div>
           </div>
         </div>
         <div class="lane reveal" style="--d:.14s">
           <b>MANAGED STATE</b>
           <div class="state">
-            <div class="node"><h4>%LOCALAPPDATA%</h4><p>bin · sdk · toolchains · cache</p></div>
-            <div class="node"><h4>%USERPROFILE%</h4><p>config · credentials · journals</p></div>
+            <div class="node"><h3>%LOCALAPPDATA%</h3><p>bin · sdk · toolchains · cache</p></div>
+            <div class="node"><h3>%USERPROFILE%</h3><p>config · credentials · journals</p></div>
           </div>
         </div>
       </div>
     </div>
     <div class="modules">
-      <div class="module reveal"><i>01</i><h4>Project interpretation</h4><p>Reads <code>.pbxproj</code>, <code>.xcconfig</code> and schemes like Xcode, keeping Base SDK and deployment target apart.</p></div>
-      <div class="module reveal" style="--d:.05s"><i>02</i><h4>Package engine</h4><p>Resolves and builds SwiftPM graphs in isolated, cached workspaces; CocoaPods and Carthage too.</p></div>
-      <div class="module reveal" style="--d:.1s"><i>03</i><h4>Compiler proxy</h4><p>Runs the official Swift and Clang drivers with explicit modules and a shared compilation cache.</p></div>
-      <div class="module reveal" style="--d:.15s"><i>04</i><h4>Resource compilers</h4><p>Asset catalogs, Icon Composer icons, Core Data, strings and storyboards through OpenIB.</p></div>
-      <div class="module reveal" style="--d:.2s"><i>05</i><h4>Build driver</h4><p>Incremental per target: unchanged modules and links are skipped, edits rebuild only what changed.</p></div>
-      <div class="module reveal" style="--d:.25s"><i>06</i><h4>Packaging &amp; signing</h4><p>Bundles frameworks and extensions, signs with your certificate and profile, writes the IPA.</p></div>
+      <div class="module reveal"><i>01</i><h3>Project interpretation</h3><p>Reads <code>.pbxproj</code>, <code>.xcconfig</code> and schemes like Xcode, keeping Base SDK and deployment target apart.</p></div>
+      <div class="module reveal" style="--d:.05s"><i>02</i><h3>Package engine</h3><p>Resolves and builds SwiftPM graphs in isolated, cached workspaces; CocoaPods and Carthage too.</p></div>
+      <div class="module reveal" style="--d:.1s"><i>03</i><h3>Compiler proxy</h3><p>Runs the official Swift and Clang drivers with explicit modules and a shared compilation cache.</p></div>
+      <div class="module reveal" style="--d:.15s"><i>04</i><h3>Resource compilers</h3><p>Asset catalogs, Icon Composer icons, Core Data, strings and storyboards through OpenIB.</p></div>
+      <div class="module reveal" style="--d:.2s"><i>05</i><h3>Build driver</h3><p>Incremental per target: unchanged modules and links are skipped, edits rebuild only what changed.</p></div>
+      <div class="module reveal" style="--d:.25s"><i>06</i><h3>Packaging &amp; signing</h3><p>Bundles frameworks and extensions, signs with your certificate and profile, writes the IPA.</p></div>
     </div>
   </section>
 
@@ -472,11 +478,11 @@ footer .legal { max-width: 70ch; font-size: .8rem; }
         <li>The Apple Devices app or iTunes, to install over USB</li>
       </ul>
       <div class="reveal" style="--d:.08s">
-        <div class="code"><div class="head"><span>Install</span><button class="copy" type="button">copy</button></div><pre>git clone https://github.com/ssilvestri15/openfruit.git
+        <div class="code"><div class="head"><span>Install</span><button class="copy" type="button">copy</button></div><pre tabindex="0">git clone https://github.com/ssilvestri15/openfruit.git
 cd openfruit
 .\openfruit\windows\build.ps1 -WithTests
 openfruit bootstrap</pre></div>
-        <div class="code"><div class="head"><span>Build and install an app</span><button class="copy" type="button">copy</button></div><pre>openfruit build C:\path\to\MyApp.xcodeproj --scheme MyApp
+        <div class="code"><div class="head"><span>Build and install an app</span><button class="copy" type="button">copy</button></div><pre tabindex="0">openfruit build C:\path\to\MyApp.xcodeproj --scheme MyApp
 openfruit devices
 openfruit device install C:\path\to\MyApp-signed.ipa --udid &lt;UDID&gt;</pre></div>
       </div>
