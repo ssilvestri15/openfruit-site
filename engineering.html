@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building iOS apps on Windows: how OpenFruit works</title>
+<meta name="description" content="Engineering notes on OpenFruit: reading Xcode projects like Xcode, getting Apple's SDK without a Mac, running Apple's original Swift macros on Windows, compiling storyboards and signing IPAs.">
+<meta name="theme-color" content="#161C16">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ssilvestri15.github.io/openfruit-site/engineering.html">
+<meta property="og:title" content="Building iOS apps on Windows: how OpenFruit works">
+<meta property="og:description" content="Xcode semantics, Apple's SDK without a Mac, Apple's original Swift macros on an ARM64 CPU core, storyboards and signing.">
+<meta property="og:image" content="https://ssilvestri15.github.io/openfruit-site/assets/openfruit-social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="OpenFruit">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://ssilvestri15.github.io/openfruit-site/assets/openfruit-social.png">
+<link rel="icon" href="assets/openfruit-icon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="assets/openfruit.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #161C16;
+  --bg-2: #1A2019;
+  --tile: #222821;
+  --tile-2: #262D25;
+  --line: #2C3329;
+  --sage-1: #DCE6C2;
+  --sage-2: #C9D3B3;
+  --sage-3: #BCC79F;
+  --sage-4: #A9B48F;
+  --sage-5: #97A27D;
+  --text: #C9D3B3;
+  --muted: #8E977B;
+  --radius: 22px;
+  --sans: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Syne Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--sage-1); text-decoration-color: color-mix(in srgb, var(--sage-3) 50%, transparent); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--sage-1); }
+.wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+
+.ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.ambient span {
+  position: absolute; width: 46vmax; height: 46vmax; border-radius: 50%;
+  filter: blur(90px); opacity: .14;
+  background: radial-gradient(circle, var(--sage-3), transparent 62%);
+}
+.ambient span:nth-child(1) { top: -18vmax; left: -12vmax; }
+.ambient span:nth-child(2) { bottom: -22vmax; right: -14vmax; opacity: .1; background: radial-gradient(circle, var(--sage-5), transparent 62%); }
+
+nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; letter-spacing: .02em; font-size: 1.05rem; color: var(--sage-1); }
+.brand img { width: 30px; height: 30px; }
+nav .links { display: flex; gap: 22px; font-family: var(--mono); font-size: .9rem; }
+nav .links a { text-decoration: none; color: var(--muted); transition: color .2s; }
+nav .links a:hover { color: var(--sage-1); }
+
+.layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 56px; padding: 56px 0 40px; }
+.toc { position: sticky; top: 92px; align-self: start; font-family: var(--mono); font-size: .84rem; }
+.toc b { display: block; color: var(--sage-4); font-weight: 400; letter-spacing: .04em; margin-bottom: 10px; }
+.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: toc; }
+.toc li { counter-increment: toc; }
+.toc a { color: var(--muted); text-decoration: none; display: flex; gap: 10px; }
+.toc a::before { content: counter(toc, decimal-leading-zero); color: var(--sage-5); }
+.toc a:hover { color: var(--sage-1); }
+
+article { max-width: 74ch; }
+.eyebrow { font-family: var(--mono); color: var(--sage-4); font-size: .88rem; letter-spacing: .04em; display: inline-block; padding: 5px 13px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--tile) 70%, transparent); }
+h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.04; margin: 20px 0 18px; font-weight: 800; letter-spacing: -.02em; color: var(--sage-1); }
+.lead { font-size: clamp(1.08rem, 2vw, 1.25rem); color: var(--sage-2); margin: 0 0 12px; }
+.byline { font-family: var(--mono); font-size: .85rem; color: var(--muted); margin: 0 0 8px; }
+h2 { font-size: clamp(1.55rem, 3.4vw, 2.1rem); line-height: 1.15; margin: 64px 0 14px; font-weight: 800; letter-spacing: -.01em; color: var(--sage-1); scroll-margin-top: 90px; }
+h2 .n { font-family: var(--mono); font-weight: 400; font-size: .55em; color: var(--sage-5); display: block; letter-spacing: .06em; margin-bottom: 6px; }
+h3 { font-size: 1.12rem; margin: 30px 0 6px; color: var(--sage-1); font-weight: 700; }
+p { margin: 0 0 16px; }
+strong { color: var(--sage-1); font-weight: 700; }
+ul, ol.steps { padding-left: 1.2em; margin: 0 0 18px; }
+li { margin: 0 0 6px; }
+li::marker { color: var(--sage-5); }
+code { font-family: var(--mono); font-size: .9em; color: var(--sage-1); background: color-mix(in srgb, var(--tile) 80%, transparent); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+pre { margin: 0 0 20px; padding: 18px 20px; border-radius: 16px; background: linear-gradient(170deg, var(--tile-2), var(--bg-2)); border: 1px solid var(--line); overflow-x: auto; font-family: var(--mono); font-size: .86rem; line-height: 1.65; color: var(--sage-2); }
+pre code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+.note { margin: 22px 0; padding: 16px 20px; border-left: 3px solid var(--sage-4); background: color-mix(in srgb, var(--tile) 70%, transparent); border-radius: 0 14px 14px 0; color: var(--sage-2); }
+.note p:last-child { margin: 0; }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 22px; font-family: var(--mono); font-size: .82rem; }
+.chain span { padding: 6px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--tile); color: var(--sage-2); }
+.chain i { font-style: normal; color: var(--sage-5); }
+.table-wrap { overflow-x: auto; margin: 0 0 20px; border: 1px solid var(--line); border-radius: 16px; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--mono); font-weight: 400; font-size: .8rem; color: var(--sage-4); background: var(--tile); }
+tr:last-child td { border-bottom: 0; }
+.sources { font-size: .9rem; color: var(--muted); }
+.sources a { color: var(--sage-3); }
+
+footer { border-top: 1px solid var(--line); padding: 34px 0 48px; color: var(--muted); font-size: .9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; }
+footer a { color: var(--sage-3); text-decoration: none; }
+footer a:hover { color: var(--sage-1); }
+footer .legal { max-width: 70ch; font-size: .8rem; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 36px; }
+  .toc { position: static; padding: 16px 18px; border: 1px solid var(--line); border-radius: 16px; background: color-mix(in srgb, var(--tile) 60%, transparent); }
+  .hide-sm { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="ambient" aria-hidden="true"><span></span><span></span></div>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="./"><img src="assets/openfruit-icon.svg" alt="">OpenFruit</a>
+    <div class="links">
+      <a href="./#download">Download</a>
+      <a class="hide-sm" href="./#how">How it works</a>
+      <a href="https://github.com/ssilvestri15/openfruit">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap layout">
+  <aside class="toc" aria-label="Contents">
+    <b>Contents</b>
+    <ol>
+      <li><a href="#problem">The problem</a></li>
+      <li><a href="#xcode">Reading projects like Xcode</a></li>
+      <li><a href="#sdk">Apple's SDK without a Mac</a></li>
+      <li><a href="#macros">Apple's macros on Windows</a></li>
+      <li><a href="#storyboards">Storyboards without IB</a></li>
+      <li><a href="#signing">Signing and installing</a></li>
+      <li><a href="#results">Where it stands</a></li>
+    </ol>
+  </aside>
+
+  <article>
+    <span class="eyebrow">engineering notes</span>
+    <h1>Building iOS apps on Windows: what it actually takes</h1>
+    <p class="lead">OpenFruit builds unmodified Xcode projects into signed iOS apps natively on Windows. This page is about the parts that turned out to be hard, and how each one is solved.</p>
+    <p class="byline">Simone Silvestri · OpenFruit is experimental, open source, GPL-2.0-or-later</p>
+
+    <h2 id="problem"><span class="n">00</span>The problem</h2>
+    <p>Compiling Swift for an iPhone on Windows is, by itself, the easy part. The Swift toolchain for Windows exists, and Clang has targeted <code>arm64-apple-ios</code> for years. What a real app needs on top of the compiler is everything Xcode does around it:</p>
+    <ul>
+      <li>the project format and its build settings, with all of Xcode's rules for combining them;</li>
+      <li>Apple's iOS SDK: headers, Swift interfaces and the libraries to link against;</li>
+      <li>the tools that only exist as macOS binaries, starting with Apple's own Swift macros;</li>
+      <li>storyboards, asset catalogs and the other resource compilers;</li>
+      <li>code signing, the IPA and getting it onto a device.</li>
+    </ul>
+    <p>OpenFruit has one rule that shapes everything below: <strong>the project is never patched.</strong> No edits to sources, <code>Package.swift</code>, <code>.pbxproj</code> or <code>.xcconfig</code>, no per-project switches, no hand-written replacements for a macro that does not run. When something fails, the fix has to be the missing piece of Xcode-compatible behaviour, implemented generically. Real apps such as Nextcloud, VLC, Delta and Swiftfin are regression tests, not special cases.</p>
+
+    <h2 id="xcode"><span class="n">01</span>Reading projects the way Xcode does</h2>
+    <p>A <code>.pbxproj</code> is easy to parse. Deciding what value a build setting really has is not: Xcode merges defaults, the project, the target and their <code>.xcconfig</code> files, and every level can refer to the previous one.</p>
+    <h3>Layers, includes and <code>$(inherited)</code></h3>
+    <p>Each configuration can point to a base <code>.xcconfig</code> through <code>baseConfigurationReference</code>. Those files can <code>#include</code> others, or <code>#include?</code> them, which silently skips a missing file. <code>$(inherited)</code> and <code>${inherited}</code> expand to the value from the level below, and values go through Xcode's modifiers, for example <code>$(PRODUCT_NAME:c99extidentifier)</code> to turn a product name into a valid identifier.</p>
+    <h3>Conditional settings</h3>
+    <p>Settings can be qualified, and several qualified forms of the same key can coexist:</p>
+<pre><code>OTHER_SWIFT_FLAGS = -DBASE
+OTHER_SWIFT_FLAGS[sdk=iphoneos*] = $(inherited) -DDEVICE
+OTHER_SWIFT_FLAGS[config=Debug][arch=arm64] = $(inherited) -DDEBUG_ARM64</code></pre>
+    <p>OpenFruit evaluates <code>config</code>, <code>sdk</code>, <code>arch</code> and <code>variant</code> against the real build (for example <code>iphoneos</code>, <code>arm64</code>, <code>normal</code>). When several forms match, the most specific one wins: more conditions first, then more literal characters in the patterns. Configuration names are matched case-sensitively, as Swift Build does with <code>fnmatch</code>; SDK and architecture patterns are not. An unknown or malformed condition stops the build with an error instead of being guessed.</p>
+    <h3>Small rules that break real apps</h3>
+    <ul>
+      <li><strong>Base SDK and deployment target are separate.</strong> An app can build against the iOS 27 SDK and still run on iOS 15. Both come from the build settings, never from <code>Info.plist</code>.</li>
+      <li><strong>XCFramework slices are chosen from metadata, not names.</strong> OpenFruit reads <code>AvailableLibraries</code> in the framework's <code>Info.plist</code> and matches <code>SupportedPlatform</code>, <code>SupportedPlatformVariant</code> and <code>SupportedArchitectures</code> against the target, so a device build never picks a simulator slice called <code>ios-arm64</code> by accident.</li>
+      <li><strong>Old Swift language modes.</strong> VLC still has a target in Swift 4 mode. With explicit modules and compilation caching it failed on SDK interfaces; the fix was to apply swift-build's own rule: no explicit modules or caching below Swift 5 or with C++ interop.</li>
+      <li><strong>Folder-synchronized groups.</strong> Recent Xcode projects use <code>PBXFileSystemSynchronizedRootGroup</code>, where the file list comes from the folder on disk rather than from the project file.</li>
+    </ul>
+
+    <h2 id="sdk"><span class="n">02</span>Getting Apple's SDK without a Mac</h2>
+    <p>OpenFruit does not ship any Apple software. Each user downloads Xcode with their own Apple account: they sign in on Apple's own page, and the resulting session is stored encrypted with Windows DPAPI. OpenFruit then picks the matching Xcode from Apple's live catalog and reads the iOS SDK out of it.</p>
+    <p>A <code>.xip</code> is three formats nested inside each other:</p>
+    <div class="chain"><span>XAR</span><i>→</i><span>PBZX</span><i>→</i><span>CPIO</span><i>→</i><span>iPhoneOS.sdk</span></div>
+    <ul>
+      <li><strong>XAR</strong> is the outer archive, with a zlib-compressed XML table of contents and a signature;</li>
+      <li><strong>PBZX</strong> is Apple's chunked stream, where each chunk is raw or XZ-compressed;</li>
+      <li><strong>CPIO</strong> (the old odc format) holds the files, with their modes, hard links and symbolic links.</li>
+    </ul>
+    <p>Everything is streamed, with limits on table size, decoder memory and entry counts. Before an SDK is registered, the XAR digest and signature, Apple's certificate chain and revocation are all checked. The SDK version comes from the original <code>SDKSettings.json</code>, never from a file name, and the tree is installed as one unit so that Xcode's relative symbolic links keep working.</p>
+
+    <h2 id="macros"><span class="n">03</span>Running Apple's original Swift macros on Windows</h2>
+    <p>This is the hardest part of the project. Swift macros run as compiler plugins, separate programs that the compiler talks to. There are two kinds:</p>
+    <ul>
+      <li><strong>Macros from Swift packages</strong> come with source code. OpenFruit builds them for Windows and the compiler loads them as ordinary <code>.dll</code> plugins.</li>
+      <li><strong>Apple's own macros</strong>, such as the ones behind SwiftUI's <code>@State</code>, have no source. They exist only as arm64 Mach-O libraries inside Xcode, loaded by Apple's <code>swift-plugin-server</code>, a macOS program.</li>
+    </ul>
+    <p>Writing replacements that produce "the same" expansions would break the rule above, and would be wrong the first time Apple changes a macro. So OpenFruit runs Apple's original binaries.</p>
+    <h3>An ARM64 CPU and a slice of Darwin</h3>
+    <p>OpenFruit does not emulate a whole Mac. It runs the original Mach-O code on the <a href="https://www.unicorn-engine.org/">Unicorn</a> 2.1.4 AArch64 CPU core, built unchanged on Windows, and implements the part of Darwin that the plugin server actually uses:</p>
+    <ul>
+      <li>loading Mach-O images and the dyld shared cache, applying chained fixups and pointer authentication;</li>
+      <li>Mach virtual memory, Mach ports and messages, threads and thread-local storage;</li>
+      <li>the BSD system calls, clocks and the commpage (the page of system values that macOS maps into every process).</li>
+    </ul>
+    <p>A system call that is not implemented fails with an explicit error; it never returns a fake success. Each piece of Darwin behaviour is tracked as a reviewed contract with its own scope and tests, rather than as a single "percent compatible" figure.</p>
+    <div class="note"><p>A small detail from this part: Unicorn and zlib both define a <code>crc32</code> symbol, and linking them statically failed. Rather than patch either library, the CPU core is built as its own <code>unicorn.dll</code>.</p></div>
+    <h3>macOS system libraries, from Apple's public restore image</h3>
+    <p>The plugin server needs macOS's own system libraries, which live in the dyld shared cache. OpenFruit gets them from Apple's public macOS restore image, without downloading all of it:</p>
+    <ol class="steps">
+      <li>The restore image is a 26.6 GB ZIP64 file. HTTP range requests read its directory and only the members that are needed.</li>
+      <li>The system volume inside is an encrypted Apple Archive (<code>.dmg.aea</code>, about 2.4 GB). Its key comes from Apple's public key server and is checked as a P-256 key. Every cluster and segment is then authenticated while it is decrypted, and the payloads are decoded with Apple's own LZFSE reference code.</li>
+      <li>The result is an APFS disk image, which OpenFruit reads natively. It verifies the sealed volume's hash tree from the root down, walks the directory and extent trees, and decompresses files stored with LZBITMAP compression.</li>
+      <li>From there it extracts the dyld shared cache: the main file plus 79 subcaches, about 7 GB, with 429,920 data-hash records checked on the way.</li>
+    </ol>
+    <h3>Making the compiler talk to it</h3>
+    <p>On Windows, the Swift compiler only discovers plugins named <code>.dll</code>, so it cannot find Apple's <code>libSomething.dylib</code> files by scanning a folder. The official frontend option <code>-load-resolved-plugin &lt;library&gt;#&lt;host&gt;#&lt;module&gt;</code> binds an explicit library and module without renaming anything. It also has to be passed through <code>-Xfrontend</code>: the driver accepts the bare option and then silently drops it from the frontend jobs.</p>
+    <p>One more obstacle: the compiler sends the plugin's path to the host, and the original dyld rejects a Windows path with backslashes. A small broker between the two rewrites exactly one field, <code>loadPluginLibrary.libraryPath</code>, to the plugin's virtual macOS path. Every other message and every expansion passes through byte for byte.</p>
+    <p>The order of preference is fixed: a native Windows plugin built from source; if that is impossible, the original Mach-O plugin on the emulated runtime; otherwise an explicit error. Two plugin processes run at a time and stay warm between compilations.</p>
+
+    <h2 id="storyboards"><span class="n">04</span>Storyboards without Interface Builder</h2>
+    <p>Apple compiles <code>.storyboard</code> and <code>.xib</code> files with <code>ibtool</code>, which only runs on a Mac. OpenFruit uses <strong>OpenIB</strong>, a clean-room C++20 compiler that writes the binary <code>NIBArchive</code> files UIKit loads at runtime (<code>.storyboardc</code> and <code>.nib</code>).</p>
+    <p>A NIB is a 50-byte header followed by four tables:</p>
+    <div class="chain"><span>objects</span><span>keys</span><span>values</span><span>classes</span></div>
+    <ul>
+      <li>each <strong>object</strong> names a class and a run of values; object zero is the root;</li>
+      <li><strong>keys</strong> are deduplicated strings such as <code>UIFrame</code> or <code>UISubviews</code>;</li>
+      <li>each <strong>value</strong> has a key, a type byte and a payload: integers, floats, booleans, bytes, nil or a reference to another object;</li>
+      <li>each <strong>class</strong> carries fallback classes, so UIKit can substitute a known superclass when a custom class is missing.</li>
+    </ul>
+    <p>Counts and indices use a variable-length integer with seven payload bits per byte, least significant group first, where bit 7 marks the <em>last</em> byte, not a continuation as in LEB128. Arrays and dictionaries are not separate types: they are inlined objects marked <code>NSInlinedValue</code>, followed by references under the empty key <code>UINibEncoderEmptyKey</code>. OpenIB treats all this as a compatibility model checked against real apps, not as an Apple specification. It compiles the storyboards of Nextcloud and Delta, which then load on a real iPhone.</p>
+
+    <h2 id="signing"><span class="n">05</span>Signing and installing from Windows</h2>
+    <p>Signing starts from the same build settings as everything else. Entitlements come from <code>CODE_SIGN_ENTITLEMENTS</code>, expanded like any other setting, for the app and for each extension and framework inside it. The certificate, stored encrypted with DPAPI, and the provisioning profile are validated first, so a wrong profile is reported before any work starts.</p>
+    <p>The signature itself is written by the open-source <a href="https://github.com/zhlynn/zsign">zsign</a>. OpenFruit then verifies the result independently. For every Mach-O it parses the CodeDirectory, checks that the code hash slots cover the binary and that the special slots match <code>Info.plist</code>, the resources and the entitlements, and computes the CDHash (truncated to 20 bytes, as Darwin expects).</p>
+    <p>Installing does not need iTunes or a Python stack. OpenFruit talks to the device directly:</p>
+    <div class="chain"><span>usbmux</span><i>→</i><span>lockdown (TLS)</span><i>→</i><span>AFC upload</span><i>→</i><span>installation_proxy</span></div>
+    <p>The only external piece is Apple's USB driver, which comes with the Apple Devices app.</p>
+
+    <h2 id="results"><span class="n">06</span>Where it stands</h2>
+    <p>These open-source apps build from a clean checkout into a signed IPA, with no changes to their repositories (<code>git status</code> stays empty), arm64, iOS 27.2 SDK:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>App</th><th>What it exercises</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td><a href="https://github.com/nextcloud/ios">Nextcloud</a></td><td>Large Swift and Objective-C app, many SwiftPM packages, storyboards, extensions</td><td>Signed IPA. About 41 minutes from a fresh install, 39 seconds when nothing changed</td></tr>
+          <tr><td><a href="https://github.com/rileytestut/Delta">Delta</a></td><td>Workspace, C and C++ emulator cores, alternate icons</td><td>Signed IPA, installed and launched on an iPhone</td></tr>
+          <tr><td><a href="https://github.com/videolan/vlc-ios">VLC</a></td><td>CocoaPods, XCFrameworks, a Swift 4 extension</td><td>Signed IPA, installed and launched</td></tr>
+          <tr><td><a href="https://github.com/jellyfin/Swiftfin">Swiftfin</a></td><td>SwiftUI and Apple macros, Icon Composer icons</td><td>Signed IPA</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>It is still experimental. Some resources inside SwiftPM packages are not built yet, Icon Composer icons are flattened without Liquid Glass effects, and capabilities tied to another team's account cannot be provisioned. The full list is in the <a href="https://github.com/ssilvestri15/openfruit#readme">README</a>.</p>
+    <p>If you want to try it, or to point it at an app that breaks, the code is on <a href="https://github.com/ssilvestri15/openfruit">GitHub</a>. A failing open-source app, reported with its first error, is the most useful contribution there is.</p>
+    <p class="sources">Details for every section, with the exact versions and checks, are in the repository's <a href="https://github.com/ssilvestri15/openfruit/tree/main/docs">docs</a> folder and in <a href="https://github.com/ssilvestri15/openfruit/tree/main/openib">OpenIB</a>.</p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a href="https://github.com/ssilvestri15/openfruit">openfruit</a> ·
+      <a href="https://github.com/ssilvestri15/openfruit-studio">openfruit-studio</a> ·
+      GPL-2.0-or-later
+    </div>
+    <p class="legal">OpenFruit is an independent project, not affiliated with or endorsed by Apple Inc. Xcode, iOS, Swift and the iOS SDK are Apple software and trademarks; OpenFruit does not redistribute them, and each user obtains them with their own Apple account.</p>
+  </div>
+</footer>
+</body>
+</html>
